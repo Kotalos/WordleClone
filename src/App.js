@@ -3,7 +3,7 @@ import Board from './components/Board';
 import GameOver from './components/GameOver';
 import Keyboard from './components/Keyboard';
 import { createContext, useEffect, useState } from 'react';
-import { boardDefault, generateWordSet } from './Words';
+import { boardDefault, generateWordSet, getDefinition } from './Words';
 
 export const AppContext = createContext();
 
@@ -12,13 +12,21 @@ function App() {
   const [currAttempt, setCurrAttempt] = useState({ attempt: 0, letterPos: 0 });
   const [wordSet, setWordSet] = useState(new Set());
   const [disabledLetters, setDisabledLetter] = useState([]);
-  const [gameOver, setGameOver] = useState({gameOver: false, guessedWord: false})
+  const [gameOver, setGameOver] = useState({ gameOver: false, guessedWord: false })
   const [correctWord, setCorrectWord] = useState("");
+  const [definition, setDefinition] = useState({ meaning: "No definition" });
 
   useEffect(() => {
     generateWordSet().then((words) => {
+      console.log(words);
       setWordSet(words.wordSet);
       setCorrectWord(words.todaysWord);
+
+      getDefinition(words.todaysWord).then((meaning) => {
+        setDefinition({ meaning: meaning });
+        console.log(words.meaning);
+      });
+
       console.log(words.todaysWord);
     });
   }, []);
@@ -47,7 +55,7 @@ function App() {
     if (currAttempt.letterPos !== 5) return;
 
     let currWord = "";
-    for (let i = 0; i<5; i++) {
+    for (let i = 0; i < 5; i++) {
       currWord += board[currAttempt.attempt][i];
     }
 
@@ -60,15 +68,17 @@ function App() {
 
     console.log(currWord, correctWord, currWord.toLowerCase() === correctWord.toLowerCase())
     if (currWord.toLowerCase() === correctWord.toLowerCase()) {
-      setGameOver({gameOver: true, guessedWord: true})
+      setGameOver({ gameOver: true, guessedWord: true })
       return;
     }
 
     if (currAttempt.attempt === 5) {
-      setGameOver({gameOver:true, guessedWord:false})
+      setGameOver({ gameOver: true, guessedWord: false })
       return;
     }
   };
+
+  // https://api.dictionaryapi.dev/api/v2/entries/en/hello
 
   return (
     <div className="App">
@@ -79,14 +89,15 @@ function App() {
 
       <AppContext.Provider value={
         {
-        board, setBoard, 
-        currAttempt, setCurrAttempt, 
-        onSelectLetter, onDelete, onEnter, 
-        correctWord,
-        disabledLetters, setDisabledLetter,
-        gameOver, setGameOver
+          board, setBoard,
+          currAttempt, setCurrAttempt,
+          onSelectLetter, onDelete, onEnter,
+          correctWord,
+          disabledLetters, setDisabledLetter,
+          gameOver, setGameOver,
+          definition, setDefinition
         }}>
-        
+
         <div className='game'>
           <Board />
           {gameOver.gameOver ? <GameOver /> : <Keyboard />}
